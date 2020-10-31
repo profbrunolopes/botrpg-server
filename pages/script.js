@@ -1,8 +1,17 @@
 var socket = io();
-socket.emit("message", "hello");
 
-io.on("connection", (socket) => {
-  socket.on("round", (msg) => {
-    console.log(msg);
-  });
+socket.on('players', (msg) => {
+  console.log(msg);
+});
+
+socket.on('round', (msg) => {
+  console.log(msg);
+});
+
+socket.on('attackPlayer', (msg) => {
+  console.log(msg);
+});
+
+socket.on('attackMonster', (msg) => {
+  console.log(msg);
 });
