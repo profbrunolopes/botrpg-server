@@ -22,7 +22,7 @@ function roundPlayersExec(socket, client) {
 
     for (i = 0; i < participants.length; i++) {
       element = participants[i];
-      damage = getRndInteger(10, 30);
+      damage = getRndInteger(20, 40);
 
       if (element.defenseChance != -1) {
         damage = Math.floor(damage * (1 - element.defenseChance / 100));
@@ -53,16 +53,18 @@ function roundPlayersExec(socket, client) {
 }
 
 const fs = require("fs");
-const username = "profbrunolopes";
+const username = "edersondeveloper";
 
 deads = [];
 var canIngress = true;
 var gameStarted = false;
+var startDate = undefined;
+var battleStarted = false;
 var intervalStarted = false;
 var gamePreStarted = false;
 var roundPlayers = false;
 var gameInterval;
-const ingressTime = 40000;
+const ingressTime = 10000;
 var roundNumber = 0;
 const roundTime = 31000;
 
@@ -78,11 +80,11 @@ function battle(message, user, client, socket) {
 
   try {
     if (message == "!batalha" && user.username == username) {
-      fs.writeFileSync("battle.txt", "true");
-      fs.writeFileSync("data.txt", `${new Date()}`);
+      battleStarted = true;
+      startDate = new Date();
       client.action(
         url,
-        "Digite !alistar para se alistar! Use !atacar, !defender e !salvar"
+        "Digite !alistar seguido de sua classe (guerreiro, mago, clérigo)!"
       );
 
       gamePreStarted = true;
@@ -93,21 +95,67 @@ function battle(message, user, client, socket) {
   }
 
   try {
-    if (message == "!alistar" && canIngress) {
-      if (fs.readFileSync("battle.txt", "utf8") == "true") {
+    const aux = message.toLowerCase().split(" ");
+    if (aux[0] == "!alistar" && canIngress) {
+      if (battleStarted) {
+        let passedAlist = true;
         if (participants.findIndex((i) => i.player === user.username) === -1) {
-          participants.push({
-            player: user.username,
-            life: 100,
-            dead: false,
-            defenseChance: -1,
-            lastCommand: 1,
-            savedCommand: false,
-          });
-          client.action(
-            url,
-            `${user.username} está alistado para a batalha que se aproxima!`
-          );
+          switch (aux[1]) {
+            case "guerreiro":
+              participants.push({
+                player: user.username,
+                life: 100,
+                dead: false,
+                baseAttack: 15,
+                baseDefense: 15,
+                defenseChance: -1,
+                lastCommand: 1,
+                savedCommand: true,
+                ultimate: false,
+                class: "warrior",
+              });
+              break;
+            case "mago":
+              participants.push({
+                player: user.username,
+                life: 50,
+                dead: false,
+                baseAttack: 20,
+                baseDefense: 5,
+                defenseChance: -1,
+                lastCommand: 1,
+                savedCommand: false,
+                ultimate: false,
+                class: "wizard",
+              });
+              break;
+            case "clerigo":
+            case "clérigo":
+              participants.push({
+                player: user.username,
+                life: 75,
+                dead: false,
+                baseAttack: 10,
+                baseDefense: 10,
+                defenseChance: -1,
+                lastCommand: 1,
+                savedCommand: false,
+                class: "cleric",
+              });
+              break;
+            default:
+              passedAlist = false;
+              client.action(
+                url,
+                `${user.username} Digite !alistar seguido de guerreiro, mago ou clérigo!`
+              );
+          }
+          if (passedAlist) {
+            client.action(
+              url,
+              `${user.username} está alistado como ${aux[1]} para a batalha que se aproxima! Use !atacar para atacar, !especial para usar o ataque especial (mago, guerreiro), !defender para se defender de um golpe, e !salvar para tentar salvar alguém morto!`
+            );
+          }
         }
       }
     }
@@ -131,11 +179,10 @@ function battle(message, user, client, socket) {
         client.action(url, `Não há heróis caídos!`);
       }
     }
-  } catch (e) {
-    console.log(e);
+  } catch (err) {
+    console.log(err);
   }
 
-  console.log(participants.findIndex((i) => i.lastCommand === 1)) === 0;
   try {
     index = participants.findIndex((i) => i.player === user.username);
     participant = participants[index];
@@ -147,7 +194,17 @@ function battle(message, user, client, socket) {
       !participant.dead &&
       participant.lastCommand === 1
     ) {
-      damage = getRndInteger(5, 20);
+      switch (participant.class) {
+        case "warrior":
+          damage = getRndInteger(5, 10) + participant.baseAttack;
+          break;
+        case "wizard":
+          damage = getRndInteger(10, 15) + participant.baseAttack;
+          break;
+        case "cleric":
+          damage = getRndInteger(3, 8) + participant.baseAttack;
+          break;
+      }
       monster.life -= damage;
       data = { player: user.username, life: monster.life };
       client.action(
@@ -173,6 +230,50 @@ function battle(message, user, client, socket) {
   } catch (err) {
     console.log(err);
   }
+
+  try {
+    index = participants.findIndex((i) => i.player === user.username);
+    participant = participants[index];
+    if (
+      message == "!especial" &&
+      !canIngress &&
+      gameStarted &&
+      roundPlayers &&
+      !participant.dead &&
+      participant.ultimate === false
+    ) {
+      console.log(participant.class);
+      switch (participant.class) {
+        case "warrior":
+          damage = getRndInteger(10, 20) + participant.baseAttack;
+          break;
+        case "wizard":
+          damage = getRndInteger(15, 30) + participant.baseAttack;
+          break;
+      }
+
+      monster.life -= damage;
+      data = { player: participant.player, life: monster.life };
+      client.action(
+        url,
+        `${user.username} Usou o especial e atacou o monstro, tirando ${damage} pontos de vida!`
+      );
+      socket.emit("attackPlayer", JSON.stringify(data));
+
+      if (monster.life <= 0) {
+        client.action(url, `O monstro morreu!`);
+        socket.emit("monsterDeath", true);
+        gameStarted = false;
+        gamePreStarted = false;
+        participants = [];
+        clearInterval(gameInterval);
+      }
+
+      participant.ultimate = true;
+    }
+  } catch (err) {
+    console.log(err);
+  }
   try {
     index = participants.findIndex((i) => i.player === user.username);
     participant = participants[index];
@@ -184,7 +285,17 @@ function battle(message, user, client, socket) {
       !participant.dead &&
       participant.lastCommand === 1
     ) {
-      defenseChance = getRndInteger(25, 50);
+      switch (participant.class) {
+        case "warrior":
+          defenseChance = getRndInteger(30, 60);
+          break;
+        case "wizard":
+          defenseChance = getRndInteger(15, 40);
+          break;
+        case "cleric":
+          defenseChance = getRndInteger(10, 25);
+          break;
+      }
       participant.defenseChance = defenseChance;
       participant.lastCommand = 0;
       client.action(
@@ -209,13 +320,21 @@ function battle(message, user, client, socket) {
       !participant.savedCommand &&
       deads.length > 0
     ) {
-      saveProbability = Math.random() < 0.1;
+      if (participant.class === "cleric") {
+        saveProbability = Math.random() < 0.4;
+      } else {
+        saveProbability = Math.random() < 0.1;
+      }
+
       if (saveProbability) {
         indexSaved = Math.floor(Math.random() * deads.length);
         var participantSaved = deads[indexSaved];
 
         participantSaved.dead = false;
-        participantSaved.savedCommand = true;
+
+        if (participant.class != "cleric") {
+          participantSaved.savedCommand = true;
+        }
         participantSaved.life = 50;
         participant.savedCommand = true;
 
@@ -247,27 +366,26 @@ function battle(message, user, client, socket) {
     socket.emit("gameover", { gameover: true });
   }
 
-  console.log(participants, deads);
+  console.log(participants);
 
   // test if the ingressTime has passed
-  try {
-    let dataString = fs.readFileSync("data.txt", "utf8");
-    date = new Date(dataString);
-    dateNow = new Date();
-    if (dateNow - date >= ingressTime && !gameStarted && gamePreStarted) {
+  console.log(!gameStarted, canIngress);
+  if (!gameStarted && canIngress) {
+    setTimeout(() => {
       gameStarted = true;
       canIngress = false;
-      monster.life = participants.length * getRndInteger(35, 65);
-      client.action(url, "Acabou o tempo. começando a batalha");
+      monster.life = participants.length * getRndInteger(80, 125);
       socket.emit("players", JSON.stringify({ monster, participants }));
-    }
-  } catch (err) {}
-  if (gameStarted && intervalStarted == false) {
-    intervalStarted = true;
-    roundPlayersExec(socket, client);
-    gameInterval = setInterval(() => {
-      roundPlayersExec(socket, client);
-    }, roundTime);
+
+      if (gameStarted && intervalStarted == false) {
+        client.action(url, "Acabou o tempo. começando a batalha");
+        intervalStarted = true;
+        roundPlayersExec(socket, client);
+        gameInterval = setInterval(() => {
+          roundPlayersExec(socket, client);
+        }, roundTime);
+      }
+    }, ingressTime);
   }
 }
 
