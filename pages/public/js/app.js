@@ -34,9 +34,7 @@ socket.on("attackMonster", (msg) => {
 });
 
 socket.on("gameover", (msg) => {
-  monsterLife = 100;
-  npc.life  = 100;
-  gameover  = true
+  console.log(msg)
 });
 
 function preload() {
@@ -65,14 +63,15 @@ function draw() {
   textSize(12)
   text(npc.name, 65, 30);
 
-  if(gameover){
+  if(npc.life <= 0){
 
     fill(0, 0, 0);
     rect(25, 50, 150,30);
-    
+
     fill(255, 255, 255);
     textSize(20);
     text('Game Over!', 50, 70);
+
   }
   
 
