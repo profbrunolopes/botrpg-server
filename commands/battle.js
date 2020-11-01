@@ -21,7 +21,7 @@ function roundPlayersExec(socket, client) {
     for (i = 0; i < participants.length; i++) {
       element = participants[i];
 
-      damage = getRndInteger(10, 40);
+      damage = getRndInteger(10, 30);
       element.life -= damage;
 
       client.action(
@@ -43,7 +43,7 @@ function roundPlayersExec(socket, client) {
 
 const fs = require('fs');
 
-const username = 'edersondeveloper';
+const username = 'profbrunolopes';
 
 deads = [];
 var canIngress = true;
@@ -57,7 +57,11 @@ const roundTime = 31000;
 
 participants = [];
 
-monsterLife = 500;
+
+const monster = { 
+  id: 1,
+  life: 0
+}
 
 function battle(message, user, client, socket) {
   const streamer = url.replace('#', '');
@@ -87,14 +91,14 @@ function battle(message, user, client, socket) {
       participants.findIndex((i) => i.player === user.username && i.dead) === -1
     ) {
       damage = getRndInteger(5, 20);
-      monsterLife -= damage;
-      data = { player: user.username, life: monsterLife };
+      monster.life -= damage;
+      data = { player: user.username, life: monster.life };
       client.action(
         url,
         `${user.username} Atacou o monstro, tirando ${damage} pontos de vida!`,
       );
       socket.emit('attackPlayer', JSON.stringify(data));
-      if (monsterLife <= 0) {
+      if (monster.life <= 0) {
         client.action(url, `O monstro morreu!`);
         socket.emit('monsterDeath', true);
         gameStarted = false;
@@ -112,7 +116,7 @@ function battle(message, user, client, socket) {
     clearInterval(gameInterval);
     
     client.action(url, 'Todos os jogadores morreram!')
-    socket.emit('gameover', true)
+    socket.emit('gameover', {gameover:true})
   }
 
   console.log(participants);
@@ -129,8 +133,9 @@ function battle(message, user, client, socket) {
     ) {
       gameStarted = true;
       canIngress = false;
+      monster.life = participants.length * getRndInteger(35, 65);
       client.action(url, 'Acabou o tempo. começando a batalha');
-      socket.emit('players', JSON.stringify(participants));
+      socket.emit('players', JSON.stringify({monster,participants}));
     }
   } catch (err) {}
   if (gameStarted === true && intervalStarted == false) {
