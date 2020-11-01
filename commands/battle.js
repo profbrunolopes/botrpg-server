@@ -31,7 +31,7 @@ function battle(message, user, client, socket) {
     if (fs.readFileSync("battle.txt", "utf8") == "true") {
       index = participants.indexOf(user.username);
       if (index == -1) {
-        participants.push({ player: user.username, life: 100 });
+        participants.push({ player: user.username, life: 100, dead: false });
       }
     }
   }
@@ -42,7 +42,8 @@ function battle(message, user, client, socket) {
       canIngress === false &&
       gameStarted &&
       roundPlayers &&
-      participants.findIndex((i) => i.player === user.username) != -1
+      participants.findIndex((i) => i.player === user.username) != -1 &&
+      participants.findIndex((i) => i.dead === false) === true
     ) {
       damage = getRndInteger(5, 20);
       monsterLife -= damage;
@@ -90,7 +91,9 @@ function battle(message, user, client, socket) {
         client.action(url, "Round dos jogadores");
 
         participants.forEach((element) => {
-          client.action(url, `${element.player} Sua vez de atacar!`);
+          if (element.dead === false){
+            client.action(url, `${element.player} Sua vez de atacar!`);
+          }
         });
 
         roundPlayers = true;
@@ -111,7 +114,7 @@ function battle(message, user, client, socket) {
             client.action(url, `${element.player} morreu!`);
 
             socket.emit("playerDeath", element.player);
-            delete participants[i];
+            participants[i].dead = true
           }
         }
 
