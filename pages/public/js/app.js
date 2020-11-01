@@ -1,4 +1,4 @@
-let monsterLife = 100
+let monsterLife = 100;
 let gameover = false;
 
 let bg;
@@ -11,12 +11,11 @@ let npc = {
   deadImg: null,
 };
 
-
 var socket = io();
 
 socket.on("players", (msg) => {
-  let game = JSON.parse(msg)
-  monsterLife = game.monster.life
+  let game = JSON.parse(msg);
+  monsterLife = game.monster.life;
 });
 
 socket.on("round", (msg) => {
@@ -24,9 +23,9 @@ socket.on("round", (msg) => {
 });
 
 socket.on("attackPlayer", (msg) => {
-  let attack = JSON.parse(msg)
+  let attack = JSON.parse(msg);
   npc.life = attack.life;
-  console.log(attack.life)
+  console.log(attack.life);
 });
 
 socket.on("attackMonster", (msg) => {
@@ -34,7 +33,7 @@ socket.on("attackMonster", (msg) => {
 });
 
 socket.on("gameover", (msg) => {
-  console.log(msg)
+  console.log(msg);
 });
 
 function preload() {
@@ -54,26 +53,28 @@ function draw() {
   image(bg, 0, 0, 200, 300, 0, 0, 500, 500);
 
   fill(0, 153, 0);
-  rect(10, 10, 180 * npc.life/monsterLife, 30);
+  rect(10, 10, (180 * npc.life) / monsterLife, 30);
 
   fill(255, 0, 0);
-  rect(10 + 180 * npc.life/monsterLife, 10, 180 * (1 - npc.life/monsterLife), 30);
+  rect(
+    10 + (180 * npc.life) / monsterLife,
+    10,
+    180 * (1 - npc.life / monsterLife),
+    30
+  );
 
   fill(255, 255, 255);
-  textSize(12)
+  textSize(12);
   text(npc.name, 65, 30);
 
-  if(npc.life <= 0){
-
+  if (npc.life <= 0) {
     fill(0, 0, 0);
-    rect(25, 50, 150,30);
+    rect(25, 50, 150, 30);
 
     fill(255, 255, 255);
     textSize(20);
-    text('Game Over!', 50, 70);
-
+    text("Game Over!", 50, 70);
   }
-  
 
   if (npc.life > 0) {
     image(npc.aliveImg, 45, 90, 144, 190);
