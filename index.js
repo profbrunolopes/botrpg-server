@@ -13,7 +13,6 @@ app.get("/", (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  console.log("connect");
   const client = new tmi.client(options);
   const battle = require("./commands/battle");
 
