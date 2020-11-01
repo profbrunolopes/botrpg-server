@@ -56,7 +56,7 @@ monsterLife = 500;
 
 function battle(message, user, client, socket) {
   const streamer = url.replace("#", "");
-  if (message == "!batalha" && user.username == "edersondeveloper") {
+  if (message == "!batalha" && user.username == "profbrunolopes") {
     fs.writeFileSync("battle.txt", "true");
     fs.writeFileSync("data.txt", `${new Date()}`);
     client.action(url, "Digite !alistar para se alistar!");

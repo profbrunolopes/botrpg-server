@@ -1,12 +1,36 @@
+const MONSTER_LIFE = 500
+
 let bg;
 let platform;
 
 let npc = {
   name: "Punpkin Man",
-  life: 1,
+  life: MONSTER_LIFE,
   aliveImg: null,
   deadImg: null,
 };
+
+
+var socket = io();
+
+socket.on("players", (msg) => {
+  console.log(msg);
+});
+
+socket.on("round", (msg) => {
+  console.log(msg);
+});
+
+socket.on("attackPlayer", (msg) => {
+  let attack = JSON.parse(msg)
+  npc.life = attack.life;
+  console.log(attack.life)
+
+});
+
+socket.on("attackMonster", (msg) => {
+  console.log(msg);
+});
 
 function preload() {
   bg = loadImage("./public/img/bg.png");
@@ -25,10 +49,10 @@ function draw() {
   image(bg, 0, 0, 200, 300, 0, 0, 500, 500);
 
   fill(0, 153, 0);
-  rect(10, 10, 180 * npc.life, 30);
+  rect(10, 10, 180 * npc.life/MONSTER_LIFE, 30);
 
   fill(255, 0, 0);
-  rect(10 + 180 * npc.life, 10, 180 * (1 - npc.life), 30);
+  rect(10 + 180 * npc.life/MONSTER_LIFE, 10, 180 * (1 - npc.life/MONSTER_LIFE), 30);
 
   fill(255, 255, 255);
   text(npc.name, 65, 30);
