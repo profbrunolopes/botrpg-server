@@ -30,21 +30,19 @@ function roundPlayersExec(socket, client) {
       }
       element.life -= damage;
 
-      if (element.life < 0) {
-        element.life = 0;
-      }
+      if (!element.dead) {
+        client.action(
+          url,
+          `O monstro tirou ${damage} pontos de vida de ${element.player} e sobrou ${element.life} pontos de vida`
+        );
+        if (element.life <= 0 && !element.dead) {
+          element.life = 0;
+          element.dead = true;
 
-      client.action(
-        url,
-        `O monstro tirou ${damage} pontos de vida de ${element.player} e sobrou ${element.life} pontos de vida`
-      );
-      if (element.life <= 0 && !participants[i].dead) {
-        client.action(url, `${element.player} morreu!`);
-
-        socket.emit("playerDeath", element.player);
-        participants[i].dead = true;
-        deads.push(participants[i]);
-        participants.splice(i, 1);
+          client.action(url, `${element.player} morreu!`);
+          socket.emit("playerDeath", element.player);
+          deads.push(element);
+        }
       }
     }
 
@@ -53,7 +51,7 @@ function roundPlayersExec(socket, client) {
 }
 
 const fs = require("fs");
-const username = "profbrunolopes";
+const username = "edersondeveloper";
 
 deads = [];
 var canIngress = true;
@@ -186,7 +184,6 @@ function battle(message, user, client, socket) {
   try {
     index = participants.findIndex((i) => i.player === user.username);
     participant = participants[index];
-    console.log(participant);
     if (
       message == "!atacar" &&
       !canIngress &&
@@ -243,7 +240,6 @@ function battle(message, user, client, socket) {
       !participant.dead &&
       participant.ultimate === false
     ) {
-      console.log(participant.class);
       switch (participant.class) {
         case "warrior":
           damage = getRndInteger(10, 20) + participant.baseAttack;
@@ -322,14 +318,16 @@ function battle(message, user, client, socket) {
       deads.length > 0
     ) {
       if (participant.class === "cleric") {
-        saveProbability = Math.random() < 0.4;
+        saveProbability = Math.random() < 0.6;
       } else {
         saveProbability = Math.random() < 0.1;
       }
+      console.log(saveProbability);
 
       if (saveProbability) {
         let indexSaved = Math.floor(Math.random() * deads.length);
         let participantSaved = deads[indexSaved];
+        deads.splice(indexSaved, 1);
 
         participantSaved.dead = false;
 
@@ -338,8 +336,6 @@ function battle(message, user, client, socket) {
         }
         participantSaved.life = 50;
         participant.savedCommand = true;
-
-        participants.push(deads.splice(indexSaved, 1));
 
         client.action(
           url,
@@ -367,7 +363,7 @@ function battle(message, user, client, socket) {
     socket.emit("gameover", { gameover: true });
   }
 
-  console.log(participants);
+  console.log(participants, deads);
 
   // test if the ingressTime has passed
   console.log(!gameStarted, canIngress);

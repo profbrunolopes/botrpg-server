@@ -40,13 +40,12 @@ socket.on("attackMonster", (msg) => {
 });
 
 socket.on("monsterDeath", (msg) => {
-  gameStarted = false
+  gameStarted = false;
 });
-
 
 socket.on("gameover", (msg) => {
   console.log(msg);
-  gameStarted = false
+  gameStarted = false;
 });
 
 function preload() {
@@ -54,7 +53,7 @@ function preload() {
   platform = loadImage("./public/img/platform.png");
   npc.aliveImg = loadImage("./public/img/npc-idle.png");
   npc.deadImg = loadImage("./public/img/npc-dead.png");
-  
+
   music = loadSound("./public/snd/song.mp3");
   music.setVolume(0.25);
   music.loop();
@@ -67,12 +66,12 @@ function setup() {
 function draw() {
   background(152);
 
-  if(gameStarted){
-    if(!music.isPlaying()){
+  if (gameStarted) {
+    if (!music.isPlaying()) {
       music.play();
     }
   } else {
-    if(music.isPlaying()){
+    if (music.isPlaying()) {
       music.stop();
     }
   }
