@@ -9,6 +9,7 @@ var gameStarted = false;
 var intervalStarted = false;
 var gamePreStarted = false;
 var roundPlayers = false;
+var gameInterval;
 const ingressTime = 40000;
 const roundTime = 10000;
 
@@ -18,7 +19,7 @@ monsterLife = 200;
 
 function battle(message, user, client, socket) {
   const streamer = url.replace("#", "");
-  if (message == "!batalha" && user.username == 'edersondeveloper') {
+  if (message == "!batalha" && user.username == "edersondeveloper") {
     fs.writeFileSync("battle.txt", "true");
     fs.writeFileSync("data.txt", `${new Date()}`);
     client.action(url, "Digite !alistar para se alistar!");
@@ -34,7 +35,7 @@ function battle(message, user, client, socket) {
       }
     }
   }
-console.log(participants)
+  console.log(participants);
   console.log(
     message == "!atacar" &&
       canIngress === false &&
@@ -61,6 +62,7 @@ console.log(participants)
       socket.emit("attackPlayer", JSON.stringify(data));
       if (monsterLife <= 0) {
         client.action(url, `O monstro morreu!`);
+        socket.emit("monsterDeath", true);
         gameStarted = false;
         gamePreStarted = false;
         clearInterval(gameInterval);
@@ -88,8 +90,8 @@ console.log(participants)
   } catch (err) {}
   if (gameStarted === true && intervalStarted == false) {
     intervalStarted = true;
-    var gameInterval = setInterval(() => {
-      if (roundPlayers == false) {
+    gameInterval = setInterval(() => {
+      if (roundPlayers === false) {
         socket.emit("round", "players");
         client.action(url, "Round dos jogadores");
 
@@ -113,13 +115,10 @@ console.log(participants)
           element.life -= damage;
           if (element.life <= 0) {
             client.action(url, `${element.player} morreu!`);
+
+            socket.emit("playerDeath", element.player);
+            delete participants[i];
           }
-          data = {
-            player: element.player,
-            life: element.life,
-          };
-          socket.emit("attackMonster", JSON.stringify(data));
-          delete participants[i];
         }
 
         roundPlayers = false;
