@@ -24,6 +24,10 @@ function roundPlayersExec(socket, client) {
       damage = getRndInteger(10, 40);
       element.life -= damage;
 
+      if (element.life < 0){
+        element.life = 0
+      }
+
       client.action(
         url,
         `O monstro tirou ${damage} pontos de vida de ${element.player} e sobrou ${element.life} pontos de vida`,
