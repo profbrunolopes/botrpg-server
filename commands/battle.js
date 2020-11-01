@@ -9,7 +9,7 @@ var gameStarted = false;
 var intervalStarted = false;
 var gamePreStarted = false;
 var roundPlayers = false;
-const ingressTime = 10000;
+const ingressTime = 40000;
 const roundTime = 10000;
 
 participants = [];
@@ -18,7 +18,7 @@ monsterLife = 200;
 
 function battle(message, user, client, socket) {
   const streamer = url.replace("#", "");
-  if (message == "!batalha" && user.username == streamer) {
+  if (message == "!batalha" && user.username == 'edersondeveloper') {
     fs.writeFileSync("battle.txt", "true");
     fs.writeFileSync("data.txt", `${new Date()}`);
     client.action(url, "Digite !alistar para se alistar!");
@@ -34,29 +34,31 @@ function battle(message, user, client, socket) {
       }
     }
   }
+console.log(participants)
+  console.log(
+    message == "!atacar" &&
+      canIngress === false &&
+      gameStarted &&
+      roundPlayers &&
+      participants.findIndex((i) => i.player != -1)
+  );
+
   try {
-    console.log(
-      message == "!atacar" &&
-        canIngress === false &&
-        gameStarted &&
-        roundPlayers &&
-        participants.findIndex((i) => i.player != -1)
-    );
     if (
       message == "!atacar" &&
       canIngress === false &&
       gameStarted &&
       roundPlayers &&
-      participants.findIndex((i) => i.player != -1)
+      participants.findIndex((i) => i.player === user.username) != -1
     ) {
       damage = getRndInteger(5, 50);
       monsterLife -= damage;
       data = { player: user.username, life: monsterLife };
-      socket.emit("attackPlayer", JSON.stringify(data));
       client.action(
         url,
         `${user.username} Atacou o monstro, tirando ${damage} pontos de vida!`
       );
+      socket.emit("attackPlayer", JSON.stringify(data));
       if (monsterLife <= 0) {
         client.action(url, `O monstro morreu!`);
         gameStarted = false;
@@ -73,9 +75,6 @@ function battle(message, user, client, socket) {
     let dataString = fs.readFileSync("data.txt", "utf8");
     date = new Date(dataString);
     dateNow = new Date();
-    console.log(
-      dateNow - date >= ingressTime && gameStarted === false && gamePreStarted
-    );
     if (
       dateNow - date >= ingressTime &&
       gameStarted === false &&
