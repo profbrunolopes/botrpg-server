@@ -13,6 +13,11 @@ let npc = {
 
 var socket = io();
 
+socket.on("start", (msg) => {
+  monsterLife = 1;
+  npc.life = 1;
+});
+
 socket.on("players", (msg) => {
   let game = JSON.parse(msg);
   monsterLife = game.monster.life;

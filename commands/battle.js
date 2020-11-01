@@ -53,8 +53,7 @@ function roundPlayersExec(socket, client) {
 }
 
 const fs = require("fs");
-
-const username = "edersondeveloper";
+const username = "profbrunolopes";
 
 deads = [];
 var canIngress = true;
@@ -75,31 +74,65 @@ const monster = {
 };
 
 function battle(message, user, client, socket) {
-  const streamer = url.replace("#", "");
-  if (message == "!batalha" && user.username == username) {
-    fs.writeFileSync("battle.txt", "true");
-    fs.writeFileSync("data.txt", `${new Date()}`);
-    client.action(
-      url,
-      "Digite !alistar para se alistar! Use !atacar, !defender e !salvar"
-    );
+  //const streamer = url.replace("#", "");
 
-    gamePreStarted = true;
-    socket.emit("start", true);
+  try {
+    if (message == "!batalha" && user.username == username) {
+      fs.writeFileSync("battle.txt", "true");
+      fs.writeFileSync("data.txt", `${new Date()}`);
+      client.action(
+        url,
+        "Digite !alistar para se alistar! Use !atacar, !defender e !salvar"
+      );
+
+      gamePreStarted = true;
+      socket.emit("start", true);
+    }
+  } catch (e) {
+    console.log(err);
   }
-  if (message == "!alistar" && canIngress) {
-    if (fs.readFileSync("battle.txt", "utf8") == "true") {
-      if (participants.findIndex((i) => i.player === user.username) === -1) {
-        participants.push({
-          player: user.username,
-          life: 100,
-          dead: false,
-          defenseChance: -1,
-          lastCommand: 1,
-          savedCommand: false,
-        });
+
+  try {
+    if (message == "!alistar" && canIngress) {
+      if (fs.readFileSync("battle.txt", "utf8") == "true") {
+        if (participants.findIndex((i) => i.player === user.username) === -1) {
+          participants.push({
+            player: user.username,
+            life: 100,
+            dead: false,
+            defenseChance: -1,
+            lastCommand: 1,
+            savedCommand: false,
+          });
+          client.action(
+            url,
+            `${user.username} está alistado para a batalha que se aproxima!`
+          );
+        }
       }
     }
+  } catch (e) {
+    console.log(err);
+  }
+
+  try {
+    if (message == "!baixas" && !canIngress) {
+      if (deads.length > 0) {
+        let deadPlayers = "";
+        deads.forEach((dead, index) => {
+          if (index == deads.length - 1) {
+            deadPlayers += dead.player + ".";
+          } else {
+            deadPlayers += dead.player + ", ";
+          }
+        });
+        client.action(url, `Heróis caídos: ${deadPlayers}`);
+      } else {
+        client.action(url, `Não há heróis caídos!`);
+      }
+    }
+  } catch (e) {
+    console.log(e);
   }
 
   console.log(participants.findIndex((i) => i.lastCommand === 1)) === 0;
@@ -186,7 +219,7 @@ function battle(message, user, client, socket) {
         participantSaved.life = 50;
         participant.savedCommand = true;
 
-        deads.splice(indexSaved, 1);
+        participants.push(deads.splice(indexSaved, 1));
 
         client.action(
           url,
@@ -204,7 +237,7 @@ function battle(message, user, client, socket) {
     console.log(err);
   }
 
-  if (deads.length === participants.length && gameStarted) {
+  if (participants.length === 0 && gameStarted) {
     gameStarted = false;
     gamePreStarted = false;
     participants = [];
