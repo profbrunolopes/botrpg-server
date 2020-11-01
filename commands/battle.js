@@ -53,7 +53,7 @@ function roundPlayersExec(socket, client) {
 }
 
 const fs = require("fs");
-const username = "edersondeveloper";
+const username = "profbrunolopes";
 
 deads = [];
 var canIngress = true;
@@ -64,7 +64,7 @@ var intervalStarted = false;
 var gamePreStarted = false;
 var roundPlayers = false;
 var gameInterval;
-const ingressTime = 10000;
+const ingressTime = 40000;
 var roundNumber = 0;
 const roundTime = 31000;
 
@@ -186,6 +186,7 @@ function battle(message, user, client, socket) {
   try {
     index = participants.findIndex((i) => i.player === user.username);
     participant = participants[index];
+    console.log(participant);
     if (
       message == "!atacar" &&
       !canIngress &&
@@ -327,8 +328,8 @@ function battle(message, user, client, socket) {
       }
 
       if (saveProbability) {
-        indexSaved = Math.floor(Math.random() * deads.length);
-        var participantSaved = deads[indexSaved];
+        let indexSaved = Math.floor(Math.random() * deads.length);
+        let participantSaved = deads[indexSaved];
 
         participantSaved.dead = false;
 
@@ -374,7 +375,7 @@ function battle(message, user, client, socket) {
     setTimeout(() => {
       gameStarted = true;
       canIngress = false;
-      monster.life = participants.length * getRndInteger(80, 125);
+      monster.life = participants.length * getRndInteger(60, 90);
       socket.emit("players", JSON.stringify({ monster, participants }));
 
       if (gameStarted && intervalStarted == false) {
